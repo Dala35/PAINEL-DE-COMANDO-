@@ -341,16 +341,31 @@ function scrollToTop() {
       }
     } catch (err) {
       alert("Erro ao conectar com servidor.");
+      <button type="button" onclick="preencherLocalizacao()">📍 Usar minha localização</button>
     }
   });
 
   // Inicialização
   carregarProjetos();
+  <script>
+  function preencherLocalizacao() {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(function(position) {
+        document.querySelector('input[name="latitude"]').value = position.coords.latitude.toFixed(6);
+        document.querySelector('input[name="longitude"]').value = position.coords.longitude.toFixed(6);
+        alert("Localização preenchida com sucesso!");
+      }, function(error) {
+        alert("Erro ao obter localização: " + error.message);
+      });
+    } else {
+      alert("Geolocalização não é suportada neste dispositivo.");
+    }
+  }
+</script>
 </script>
 </body>
 </html>
-</script>
-</script>
-</body>
-</html>
+
+
+
 
