@@ -265,6 +265,90 @@ function scrollToTop() {
   document.getElementById("termoBusca").addEventListener("input", () => {
     carregarProjetos();
   });
+  <script>
+  const API_URL = "https://script.google.com/macros/s/AKfycbwbwCq5BoJitmc6R-5IiE7ff3VKpiKkd-Dbq_Ig2jy5zUTMqDzGj1SqvzZE67NCsycP/exec";
+
+  function detectarProvincia(lat, lng) {
+    if (lat >= -9 && lat <= -8 && lng >= 13 && lng <= 14) return "Luanda";
+    if (lat >= -13 && lat <= -12 && lng >= 14 && lng <= 16) return "Huambo";
+    if (lat >= -13 && lat <= -11 && lng >= 16 && lng <= 18) return "Bié";
+    // Acrescente aqui mais seções para outras províncias
+    return "Desconhecida";
+  }
+
+  async function carregarProjetos() {
+    const res = await fetch(API_URL);
+    const dados = await res.json();
+    const lista = document.getElementById("lista-projetos");
+    const filtro = document.getElementById("filtro-provincia")?.value || "todas";
+    const busca = document.getElementById("campo-busca")?.value?.toLowerCase() || "";
+
+    lista.innerHTML = "";
+    map.eachLayer(layer => {
+      if (layer instanceof L.Marker) map.removeLayer(layer);
+    });
+
+    let total = 0, emFormacao = 0, emExecucao = 0, piloto = 0;
+
+    dados.forEach(p => {
+      const provincia = detectarProvincia(p.latitude, p.longitude);
+      if (
+        (filtro === "todas" || filtro === provincia) &&
+        (p.nome.toLowerCase().includes(busca) || p.status.toLowerCase().includes(busca))
+      ) {
+        const div = document.createElement("div");
+        div.className = "project-info";
+        div.innerHTML = `
+          <h3>${p.emoji} ${p.nome}</h3>
+          <p>${p.descricao}</p>
+          <small>Status: ${p.status}</small>
+        `;
+        lista.appendChild(div);
+
+        L.marker([p.latitude, p.longitude])
+          .addTo(map)
+          .bindPopup(`<strong>${p.emoji} ${p.nome}</strong><br>${p.descricao}<br><em>Status: ${p.status}</em>`);
+
+        total++;
+        if (p.status.toLowerCase().includes("formação")) emFormacao++;
+        if (p.status.toLowerCase().includes("execução")) emExecucao++;
+        if (p.status.toLowerCase().includes("piloto")) piloto++;
+      }
+    });
+
+    document.getElementById("indicador-total").innerText = total;
+    document.getElementById("indicador-formacao").innerText = emFormacao;
+    document.getElementById("indicador-execucao").innerText = emExecucao;
+    document.getElementById("indicador-piloto").innerText = piloto;
+  }
+
+  // Enviar novo projeto via formulário
+  document.getElementById("formProjeto").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const dados = Object.fromEntries(new FormData(e.target).entries());
+    try {
+      const res = await fetch(API_URL, {
+        method: "POST",
+        body: JSON.stringify(dados),
+        headers: { "Content-Type": "application/json" }
+      });
+      if (res.ok) {
+        alert("Projeto adicionado com sucesso!");
+        e.target.reset();
+        carregarProjetos();
+      } else {
+        alert("Erro ao enviar projeto.");
+      }
+    } catch (err) {
+      alert("Erro ao conectar com servidor.");
+    }
+  });
+
+  // Inicialização
+  carregarProjetos();
+</script>
+</body>
+</html>
 </script>
 </script>
 </body>
